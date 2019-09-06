@@ -2,7 +2,7 @@ import sys
 import os
 import csv
 import re
-import sqlparse
+import operator
 
 metadata = {}
 
@@ -231,97 +231,128 @@ def compute_condition(query, operator, final_table, tables):
 
 def process_condition(condition, final_table, cols_print, tables):
     ans = []
+    ops = {"!=": operator.ne, "=": operator.eq, ">=": operator.ge,
+           ">": operator.gt, "<": operator.lt, "<=": operator.le}
+
     if '!=' in condition:
-        col1, var1, col2, var2 = compute_condition(
-            condition, '!=', final_table, tables)
-        if col2 == None:
-            for i in range(len(final_table['table'])):
-                if int(final_table['table'][i][col1]) != var1:
-                    ans.append(final_table['table'][i])
-        else:
-            for i in range(len(final_table['table'])):
-                if final_table['table'][i][col1] != final_table['table'][i][col2]:
-                    ans.append(final_table['table'][i])
-            if col1 in cols_print and col2 in cols_print:
-                cols_print.remove(col2)
-        return ans, cols_print
+        oper = '!='
+    elif '>=' in condition:
+        oper = '>='
+    elif '>' in condition:
+        oper = '>'
+    elif '<=' in condition:
+        oper = '<='
+    elif '<' in condition:
+        oper = '<'
+    elif '=' in condition:
+        oper = '='
+    else:
+        print("Invalid Operator")
+        sys.exit()
 
-    if '>=' in condition:
-        col1, var1, col2, var2 = compute_condition(
-            condition, '>=', final_table, tables)
-        if col2 == None:
-            for i in range(len(final_table['table'])):
-                if int(final_table['table'][i][col1]) >= var1:
-                    ans.append(final_table['table'][i])
-        else:
-            for i in range(len(final_table['table'])):
-                if final_table['table'][i][col1] >= final_table['table'][i][col2]:
-                    ans.append(final_table['table'][i])
-            if col1 in cols_print and col2 in cols_print:
-                cols_print.remove(col2)
-        return ans, cols_print
+    col1, var1, col2, var2 = compute_condition(
+        condition, oper, final_table, tables)
+    if col2 == None:
+        for i in range(len(final_table['table'])):
+            if ops[oper](int(final_table['table'][i][col1]), var1):
+                ans.append(final_table['table'][i])
+    else:
+        for i in range(len(final_table['table'])):
+            if ops[oper](int(final_table['table'][i][col1]), int(final_table['table'][i][col2])):
+                ans.append(final_table['table'][i])
+        if col1 in cols_print and col2 in cols_print:
+            cols_print.remove(col2)
+    return ans, cols_print
 
-    if '>' in condition:
-        col1, var1, col2, var2 = compute_condition(
-            condition, '>', final_table, tables)
-        if col2 == None:
-            for i in range(len(final_table['table'])):
-                if int(final_table['table'][i][col1]) > var1:
-                    ans.append(final_table['table'][i])
-        else:
-            for i in range(len(final_table['table'])):
-                if final_table['table'][i][col1] > final_table['table'][i][col2]:
-                    ans.append(final_table['table'][i])
-            if col1 in cols_print and col2 in cols_print:
-                cols_print.remove(col2)
-        return ans, cols_print
+    # if '!=' in condition:
+    #     col1, var1, col2, var2 = compute_condition(
+    #         condition, '!=', final_table, tables)
+    #     if col2 == None:
+    #         for i in range(len(final_table['table'])):
+    #             if int(final_table['table'][i][col1]) != var1:
+    #                 ans.append(final_table['table'][i])
+    #     else:
+    #         for i in range(len(final_table['table'])):
+    #             if final_table['table'][i][col1] != final_table['table'][i][col2]:
+    #                 ans.append(final_table['table'][i])
+    #         if col1 in cols_print and col2 in cols_print:
+    #             cols_print.remove(col2)
+    #     return ans, cols_print
 
-    if '<=' in condition:
-        col1, var1, col2, var2 = compute_condition(
-            condition, '<=', final_table, tables)
-        if col2 == None:
-            for i in range(len(final_table['table'])):
-                if int(final_table['table'][i][col1]) <= var1:
-                    ans.append(final_table['table'][i])
-        else:
-            for i in range(len(final_table['table'])):
-                if final_table['table'][i][col1] <= final_table['table'][i][col2]:
-                    ans.append(final_table['table'][i])
-            if col1 in cols_print and col2 in cols_print:
-                cols_print.remove(col2)
-        return ans, cols_print
+    # if '>=' in condition:
+    #     col1, var1, col2, var2 = compute_condition(
+    #         condition, '>=', final_table, tables)
+    #     if col2 == None:
+    #         for i in range(len(final_table['table'])):
+    #             if int(final_table['table'][i][col1]) >= var1:
+    #                 ans.append(final_table['table'][i])
+    #     else:
+    #         for i in range(len(final_table['table'])):
+    #             if final_table['table'][i][col1] >= final_table['table'][i][col2]:
+    #                 ans.append(final_table['table'][i])
+    #         if col1 in cols_print and col2 in cols_print:
+    #             cols_print.remove(col2)
+    #     return ans, cols_print
 
-    if '<' in condition:
-        col1, var1, col2, var2 = compute_condition(
-            condition, '<', final_table, tables)
-        if col2 == None:
-            for i in range(len(final_table['table'])):
-                if int(final_table['table'][i][col1]) < var1:
-                    ans.append(final_table['table'][i])
-        else:
-            for i in range(len(final_table['table'])):
-                if final_table['table'][i][col1] < final_table['table'][i][col2]:
-                    ans.append(final_table['table'][i])
-            if col1 in cols_print and col2 in cols_print:
-                cols_print.remove(col2)
-        return ans, cols_print
+    # if '>' in condition:
+    #     col1, var1, col2, var2 = compute_condition(
+    #         condition, '>', final_table, tables)
+    #     if col2 == None:
+    #         for i in range(len(final_table['table'])):
+    #             if int(final_table['table'][i][col1]) > var1:
+    #                 ans.append(final_table['table'][i])
+    #     else:
+    #         for i in range(len(final_table['table'])):
+    #             if final_table['table'][i][col1] > final_table['table'][i][col2]:
+    #                 ans.append(final_table['table'][i])
+    #         if col1 in cols_print and col2 in cols_print:
+    #             cols_print.remove(col2)
+    #     return ans, cols_print
 
-    if '=' in condition:
-        col1, var1, col2, var2 = compute_condition(
-            condition, '=', final_table, tables)
-        if col2 == None:
-            for i in range(len(final_table['table'])):
-                if int(final_table['table'][i][col1]) == var1:
-                    ans.append(final_table['table'][i])
-        else:
-            for i in range(len(final_table['table'])):
-                if final_table['table'][i][col1] == final_table['table'][i][col2]:
-                    ans.append(final_table['table'][i])
-            if col1 in cols_print and col2 in cols_print:
-                cols_print.remove(col2)
-        return ans, cols_print
+    # if '<=' in condition:
+    #     col1, var1, col2, var2 = compute_condition(
+    #         condition, '<=', final_table, tables)
+    #     if col2 == None:
+    #         for i in range(len(final_table['table'])):
+    #             if int(final_table['table'][i][col1]) <= var1:
+    #                 ans.append(final_table['table'][i])
+    #     else:
+    #         for i in range(len(final_table['table'])):
+    #             if final_table['table'][i][col1] <= final_table['table'][i][col2]:
+    #                 ans.append(final_table['table'][i])
+    #         if col1 in cols_print and col2 in cols_print:
+    #             cols_print.remove(col2)
+    #     return ans, cols_print
 
-    return ans
+    # if '<' in condition:
+    #     col1, var1, col2, var2 = compute_condition(
+    #         condition, '<', final_table, tables)
+    #     if col2 == None:
+    #         for i in range(len(final_table['table'])):
+    #             if int(final_table['table'][i][col1]) < var1:
+    #                 ans.append(final_table['table'][i])
+    #     else:
+    #         for i in range(len(final_table['table'])):
+    #             if final_table['table'][i][col1] < final_table['table'][i][col2]:
+    #                 ans.append(final_table['table'][i])
+    #         if col1 in cols_print and col2 in cols_print:
+    #             cols_print.remove(col2)
+    #     return ans, cols_print
+
+    # if '=' in condition:
+    #     col1, var1, col2, var2 = compute_condition(
+    #         condition, '=', final_table, tables)
+    #     if col2 == None:
+    #         for i in range(len(final_table['table'])):
+    #             if int(final_table['table'][i][col1]) == var1:
+    #                 ans.append(final_table['table'][i])
+    #     else:
+    #         for i in range(len(final_table['table'])):
+    #             if final_table['table'][i][col1] == final_table['table'][i][col2]:
+    #                 ans.append(final_table['table'][i])
+    #         if col1 in cols_print and col2 in cols_print:
+    #             cols_print.remove(col2)
+    #     return ans, cols_print
 
 
 def process_query(query):
@@ -336,16 +367,28 @@ def process_query(query):
     columns = new_query.split("from")[0].strip()
     if bool(re.match('^(sum)\(.*\)', columns)):
         sum_flag = True
-        columns = columns.replace('sum', '').strip().strip('()')
+        columns = columns.replace('sum', '').strip().strip('()').split(',')
+        if len(columns) > 1:
+            print("Only one column allowed with aggregate functions")
+            sys.exit()
     if bool(re.match('^(avg)\(.*\)', columns)):
         avg_flag = True
-        columns = columns.replace('avg', '').strip().strip('()')
+        columns = columns.replace('avg', '').strip().strip('()').split(',')
+        if len(columns) > 1:
+            print("Only one column allowed with aggregate functions")
+            sys.exit()
     if bool(re.match('^(max)\(.*\)', columns)):
         max_flag = True
-        columns = columns.replace('max', '').strip().strip('()')
+        columns = columns.replace('max', '').strip().strip('()').split(',')
+        if len(columns) > 1:
+            print("Only one column allowed with aggregate functions")
+            sys.exit()
     if bool(re.match('^(min)\(.*\)', columns)):
         min_flag = True
-        columns = columns.replace('min', '').strip().strip('()')
+        columns = columns.replace('min', '').strip().strip('()').split(',')
+        if len(columns) > 1:
+            print("Only one column allowed with aggregate functions")
+            sys.exit()
     if bool(re.match('^distinct.*', columns)):
         distinct_flag = True
         columns = columns.replace('distinct', '').strip()
@@ -370,9 +413,7 @@ def process_query(query):
         for i in range(len(columns)):
             columns[i] = parse_var(columns[i], tables)
 
-    where_flag = False
     if bool(re.match('^select.*from.*where.*', query)):
-        where_flag = True
         final_table = {}
         final_ans = []
         final_table, cols_print = create_table(tables, columns, star_flag, sum_flag,
