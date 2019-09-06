@@ -367,29 +367,33 @@ def process_query(query):
     columns = new_query.split("from")[0].strip()
     if bool(re.match('^(sum)\(.*\)', columns)):
         sum_flag = True
-        columns = columns.replace('sum', '').strip().strip('()').split(',')
-        if len(columns) > 1:
+        columns = columns.replace('sum', '').strip().strip('()')
+        col2 = columns.split(',')
+        if len(col2) > 1:
             print("Only one column allowed with aggregate functions")
             sys.exit()
-    if bool(re.match('^(avg)\(.*\)', columns)):
+    elif bool(re.match('^(avg)\(.*\)', columns)):
         avg_flag = True
-        columns = columns.replace('avg', '').strip().strip('()').split(',')
+        columns = columns.replace('avg', '').strip().strip('()')
+        col2 = columns.split(',')
         if len(columns) > 1:
             print("Only one column allowed with aggregate functions")
             sys.exit()
-    if bool(re.match('^(max)\(.*\)', columns)):
+    elif bool(re.match('^(max)\(.*\)', columns)):
         max_flag = True
-        columns = columns.replace('max', '').strip().strip('()').split(',')
+        columns = columns.replace('max', '').strip().strip('()')
+        col2 = columns.split(',')
         if len(columns) > 1:
             print("Only one column allowed with aggregate functions")
             sys.exit()
-    if bool(re.match('^(min)\(.*\)', columns)):
+    elif bool(re.match('^(min)\(.*\)', columns)):
         min_flag = True
-        columns = columns.replace('min', '').strip().strip('()').split(',')
+        columns = columns.replace('min', '').strip().strip('()')
+        col2 = columns.split(',')
         if len(columns) > 1:
             print("Only one column allowed with aggregate functions")
             sys.exit()
-    if bool(re.match('^distinct.*', columns)):
+    elif bool(re.match('^distinct.*', columns)):
         distinct_flag = True
         columns = columns.replace('distinct', '').strip()
     columns = columns.split(',')
